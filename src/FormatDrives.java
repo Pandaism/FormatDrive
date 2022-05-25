@@ -84,7 +84,7 @@ public class FormatDrives {
                     boolean checking = true;
 
                     while(checking) {
-                        
+
                     }
                     break;
             }
