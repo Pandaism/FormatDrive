@@ -1,6 +1,8 @@
 import javax.swing.filechooser.FileSystemView;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 public class FormatDrives {
@@ -13,30 +15,33 @@ public class FormatDrives {
 
         int initialSize = 0;
 
-        long startTime = System.currentTimeMillis();
+        long startTime = 0;
         long deltaTime;
 
         char newDriveLetter = '-';
         String driveName = "";
 
         boolean running = true;
-        State state = State.WAITING_FOR_DRIVE;
+        State state = State.INITIALIZE;
 
         while(running) {
             switch (state) {
                 case INITIALIZE:
                     driveLetters = new ArrayList<>();
-                    initialSize = driveLetters.size();
+
                     File[] roots = File.listRoots();
                     for(File root : roots) {
                         driveLetters.add(root.getAbsolutePath().charAt(0));
                     }
 
+                    startTime = System.currentTimeMillis();
                     newDriveLetter = '-';
                     driveName = "";
                     state = State.WAITING_FOR_DRIVE;
                     break;
                 case WAITING_FOR_DRIVE:
+                    initialSize = driveLetters.size();
+
                     while(driveLetters.size() == initialSize) {
                         deltaTime = System.currentTimeMillis() - startTime;
                         if(deltaTime > 1000) {
@@ -69,7 +74,7 @@ public class FormatDrives {
                     } else {
                         System.out.println("Drive " + driveName + "("+ newDriveLetter + ":/) has been found. Formatting to NTFS.");
 
-                        ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", "C:\\Users\\MikeN\\Desktop\\format.bat.lnk",
+                        ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", "C:\\Users\\janli\\Desktop\\format.lnk",
                                 String.valueOf(newDriveLetter), driveName);
 
                         try {
@@ -81,10 +86,18 @@ public class FormatDrives {
                     }
                     break;
                 case CHECK_FORMATTING:
-                    boolean checking = true;
+                    while(true) {
+                        ArrayList<Character> checkList = new ArrayList<>();
+                        for(File file : File.listRoots()) {
+                            checkList.add(file.getAbsolutePath().charAt(0));
+                        }
 
-                    while(checking) {
-
+                        if(!checkList.contains(newDriveLetter)) {
+                            state = State.INITIALIZE;
+                            break;
+                        } else {
+                            System.out.println("Waiting for drive " + driveLetters + " to eject...");
+                        }
                     }
                     break;
             }
